@@ -1,6 +1,11 @@
 <template>
   <Header />
-  <div class="grid grid-cols-2 gap-4">
+  <CountryTracker
+    name="Global"
+    :vaccinated="globalVaccinations"
+    :key="componentKey"
+  />
+  <div class="grid grid-cols-2 gap-4 mt-4">
     <CountryTracker
       :key="country.name"
       v-for="country in countries"
@@ -8,12 +13,14 @@
       :vaccinated="country.vaccinated"
     />
   </div>
+  <div v-if="loading" class="text-yellow-200 font-bold text-3xl">
+    Fetching data...
+  </div>
 </template>
 
 <script>
 import Header from "./components/Header";
 import CountryTracker from "./components/CountryTracker";
-//import CountrySelector from "./components/CountrySelector";
 
 export default {
   name: "App",
@@ -24,10 +31,13 @@ export default {
   data() {
     return {
       countries: [],
+      globalVaccinations: 0,
+      loading: true,
+      componentKey: 0,
     };
   },
-  created() {
-    this.fetchVaccinationData();
+  async created() {
+    await this.fetchVaccinationData();
   },
   methods: {
     async fetchVaccinationData() {
@@ -37,7 +47,7 @@ export default {
 
       const result = await res.json();
 
-      Object.keys(result).forEach((key) => {
+      await Object.keys(result).forEach((key) => {
         const data = result[key].data;
 
         let i;
@@ -48,16 +58,29 @@ export default {
             typeof iterationData !== "undefined" &&
             typeof iterationData.people_vaccinated_per_hundred !== "undefined"
           ) {
-            this.countries.push({
-              name: result[key].location,
-              vaccinated:
-                result[key].data[data.length - i + 1]
-                  .people_vaccinated_per_hundred,
-            });
+            if (result[key].location === "World") {
+              this.globalVaccinations =
+                result[key].data[
+                  data.length - i + 1
+                ].people_vaccinated_per_hundred;
+            } else {
+              this.countries.push({
+                name: result[key].location,
+                vaccinated:
+                  result[key].data[data.length - i + 1]
+                    .people_vaccinated_per_hundred,
+              });
+            }
+
             break;
           }
         }
+        this.loading = false;
+        this.forceRerender();
       });
+    },
+    forceRerender() {
+      this.componentKey += 1;
     },
   },
 };

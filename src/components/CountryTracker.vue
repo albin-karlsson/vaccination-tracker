@@ -1,6 +1,9 @@
 <template>
   <div>
-    <h1 class="text-green-200 font-bold text-2xl">
+    <h1 v-if="global" class="text-green-400 font-bold text-2xl">
+      {{ name }}
+    </h1>
+    <h1 v-else class="text-green-200 font-bold text-2xl">
       {{ name }}
     </h1>
     <div class="w-25 border-4 border-gray-200 bg-gray-100">
